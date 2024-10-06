@@ -70,7 +70,7 @@ export default function AdminPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]: e.target.value.toLowerCase,
     });
   };
 
