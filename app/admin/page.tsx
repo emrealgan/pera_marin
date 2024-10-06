@@ -68,10 +68,19 @@ export default function AdminPage() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value.toLowerCase,
-    });
+    if (e.target.name == "code") {
+      setFormData({
+        ...formData,
+        [e.target.name]: e.target.value.toLowerCase(),
+      });
+
+    }
+    else {
+      setFormData({
+        ...formData,
+        [e.target.name]: e.target.value.toLocaleUpperCase()
+      });
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
