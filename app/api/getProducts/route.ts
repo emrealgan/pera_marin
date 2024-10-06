@@ -8,10 +8,10 @@ export async function GET() {
 
     const allProducts = await Product.find({});
 
-    return new NextResponse(
-      JSON.stringify({ products: allProducts }),
-      { headers: { "Content-Type": "application/json" } }
-    );
+    return new NextResponse(JSON.stringify({ products: allProducts }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Bir hata oluştu:", error);
     return new NextResponse(
