@@ -6,7 +6,7 @@ export async function GET() {
   try {
     await connectDB();
 
-    const allProducts = await Product.find({});
+    const allProducts = await Product.find({}).select('_id name brand code url');
 
     return new NextResponse(JSON.stringify({ products: allProducts }), {
       status: 200,
@@ -20,7 +20,5 @@ export async function GET() {
       }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
-  } finally {
-    //await disconnectDB();
   }
 }
