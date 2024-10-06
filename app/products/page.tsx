@@ -28,6 +28,7 @@ export default function ProductList() {
         const data = await response.json();
         setProducts(data.products);
         setFilteredProducts(data.products);
+        console.log("data-products: ", data.products)
       } catch (err) {
         if (err instanceof Error) {
           console.error(err)
@@ -39,7 +40,7 @@ export default function ProductList() {
 
     fetchProducts();
   }, [session, status]);
-  
+
 
   const handleSearch = (query: string) => {
     if (query) {
