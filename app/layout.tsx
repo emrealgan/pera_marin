@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "@/style/global.css";
-import SessionProviderWrapper from "./lib/SessionProvider";
 
 export const metadata: Metadata = {
   title: "Pera Marin Automation",
@@ -23,9 +22,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.png" type="image/png" />
       </head>
       <body className="w-full h-full" style={{ fontFamily: 'Poppins, sans-serif' }}>
-        <SessionProviderWrapper>
-          {children}
-        </SessionProviderWrapper>
+        {children}
       </body>
     </html>
   );
