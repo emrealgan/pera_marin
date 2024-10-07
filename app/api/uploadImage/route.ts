@@ -4,7 +4,7 @@ import path from "path";
 import { tokenControl } from "@/app/lib/tokenControl";
 
 export async function POST(req: NextRequest) {
-  const uploadDir = path.join("/tmp", "uploads"); // Save files in the public directory served by your web server
+  const uploadDir = path.join("/httpdocs", "uploads"); // Save files in the public directory served by your web server
 
   try {
     const response = await tokenControl(req);
