@@ -4,7 +4,7 @@ import path from "path";
 import { tokenControl } from "@/app/lib/tokenControl";
 
 export async function POST(req: NextRequest) {
-  const uploadDir = path.join("/httpdocs", "uploads");
+  const uploadDir = path.join("/tmp", "uploads");
 
   try {
     const response = await tokenControl(req);
