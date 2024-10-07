@@ -4,7 +4,7 @@ import path from "path";
 import { tokenControl } from "@/app/lib/tokenControl";
 
 export async function POST(req: NextRequest) {
-  const uploadDir = path.join("/tmp", "uploads"); // Use /tmp for writable storage in serverless environments
+  const uploadDir = path.join("/tmp", "uploads"); // Save files in the public directory served by your web server
 
   try {
     const response = await tokenControl(req);
@@ -38,13 +38,13 @@ export async function POST(req: NextRequest) {
       // File does not exist, proceed with the upload
     }
 
-    // Convert the file to a buffer and write it to the tmp directory
+    // Convert the file to a buffer and write it to the /httpdocs/uploads directory
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     await fs.writeFile(filePath, buffer);
 
-    // Serve file from the tmp directory, encode URL to handle special characters
-    const fileUrl = `/uploads/${encodeURIComponent(uniqueFileName)}`;
+    // Serve file from the httpdocs/uploads directory, encode URL to handle special characters
+    const fileUrl = `https://www.peramarin.com/uploads/${encodeURIComponent(uniqueFileName)}`;
 
     // Return the URL where the file is accessible
     return NextResponse.json({ url: fileUrl }, { status: 200 });
