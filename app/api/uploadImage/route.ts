@@ -4,13 +4,15 @@ import path from "path";
 import { tokenControl } from "@/app/lib/tokenControl";
 
 export async function POST(req: NextRequest) {
-  const uploadDir = path.join("/tmp", "uploads");
+  const uploadDir = path.join("/tmp", "uploads"); // Use /tmp for writable storage in serverless environments
 
   try {
     const response = await tokenControl(req);
     if (response) {
       return response;
     }
+
+    // Ensure the directory exists
     await fs.mkdir(uploadDir, { recursive: true });
 
     const formData = await req.formData();
@@ -25,7 +27,7 @@ export async function POST(req: NextRequest) {
     const uniqueFileName = `${code}${fileExtension}`;
     const filePath = path.join(uploadDir, uniqueFileName);
 
-    // Check if the file already exists in the temp directory
+    // Check if the file already exists
     try {
       await fs.access(filePath);
       return NextResponse.json(
@@ -36,22 +38,15 @@ export async function POST(req: NextRequest) {
       // File does not exist, proceed with the upload
     }
 
+    // Convert the file to a buffer and write it to the tmp directory
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     await fs.writeFile(filePath, buffer);
 
-    // After upload, you can either move the file to the public directory 
-    // or serve it from the temp directory (depending on your setup)
-
-    // Here is an example of moving to public/uploads (update path as needed)
-    const publicUploadDir = path.join(__dirname, "public", "uploads");
-    await fs.mkdir(publicUploadDir, { recursive: true }); // Ensure public upload directory exists
-    const finalFilePath = path.join(publicUploadDir, uniqueFileName);
-    await fs.rename(filePath, finalFilePath); // Move the file to the public directory
-
-    // Use encodeURIComponent to encode the filename for the URL
+    // Serve file from the tmp directory, encode URL to handle special characters
     const fileUrl = `/uploads/${encodeURIComponent(uniqueFileName)}`;
 
+    // Return the URL where the file is accessible
     return NextResponse.json({ url: fileUrl }, { status: 200 });
   } catch (error) {
     console.error("Error uploading file:", error);
