@@ -41,8 +41,10 @@ export async function DELETE(
 
     await Product.findByIdAndDelete(id);
 
-    return NextResponse.json({ message: "Product deleted successfully" });
-  } catch (error) {
+    return new NextResponse(JSON.stringify({ message: "Product deleted successfully" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });  } catch (error) {
     console.error("Delete error:", error);
     return NextResponse.json(
       { message: "An error occurred while deleting the product" },

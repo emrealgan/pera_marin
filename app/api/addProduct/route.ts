@@ -32,9 +32,9 @@ export async function POST(req: NextRequest) {
     const result = await newProduct.save();
     console.log("Product added:", result);
 
-    return NextResponse.json({
-      message: "Product added successfully",
-      data: result,
+    return new NextResponse(JSON.stringify({ data: result }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error: unknown) {
     console.error("Error adding product:", error);

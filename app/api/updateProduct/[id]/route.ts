@@ -76,9 +76,9 @@ export async function PUT(
       url: fileUrl,
     });
 
-    return NextResponse.json({
-      message: "Product updated successfully",
-      product: result,
+    return new NextResponse(JSON.stringify({ product: result }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Update error:", error);
