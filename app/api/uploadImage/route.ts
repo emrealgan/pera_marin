@@ -4,7 +4,6 @@ import path from "path";
 import { tokenControl } from "@/app/lib/tokenControl";
 
 export async function POST(req: NextRequest) {
-  // Change this to your deployment's writable directory
   const uploadDir = path.join("/tmp", "uploads");
 
   try {
