@@ -2,7 +2,6 @@
 import Navbar from "@/components/Navbar";
 import React, { useEffect, useState } from "react";
 import SearchBar from '@/components/SearchBar';
-import { useSession } from "next-auth/react";
 
 interface Product {
   brand: string;
@@ -15,7 +14,6 @@ export default function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const { data: session, status } = useSession();
 
 
   useEffect(() => {
@@ -38,7 +36,7 @@ export default function ProductList() {
     };
 
     fetchProducts();
-  }, [session, status]);
+  }, []);
 
 
   const handleSearch = (query: string) => {
