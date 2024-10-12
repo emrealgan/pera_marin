@@ -14,11 +14,13 @@ export default function RootLayout({
   return (
     <html className="w-full h-full">
       <head>
+        <meta name="description" content={String(metadata.description)} />
+        <meta charSet="utf-8" name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{String(metadata.title)}</title>
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
         />
-        <meta charSet="utf-8" name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" href="/favicon.png" type="image/png" />
       </head>
       <body className="w-full h-full" style={{ fontFamily: 'Poppins, sans-serif' }}>
