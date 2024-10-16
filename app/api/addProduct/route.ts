@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       brand,
       name,
       code,
-      url,
+      urls: url,
     });
 
     const result = await newProduct.save();

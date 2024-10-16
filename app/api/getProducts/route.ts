@@ -6,7 +6,7 @@ export async function GET() {
   try {
     await connectDB();
 
-    const allProducts = await Product.find({}).select('_id name brand code url');
+    const allProducts = await Product.find({}).select('_id name brand code urls');
     return new NextResponse(JSON.stringify({ products: allProducts }), {
       status: 200,
       headers: { "Content-Type": "application/json" },

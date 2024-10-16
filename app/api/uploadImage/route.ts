@@ -4,7 +4,7 @@ import path from "path";
 import { tokenControl } from "@/app/lib/tokenControl";
 
 export async function POST(req: NextRequest) {
-  const uploadDir = path.join("/tmp", "uploads");
+  const uploadDir = path.join(process.cwd(), "public", "uploads");
 
   try {
     const response = await tokenControl(req);
@@ -12,45 +12,68 @@ export async function POST(req: NextRequest) {
       return response;
     }
 
-    await fs.mkdir(uploadDir, { recursive: true });
-
     const formData = await req.formData();
-    const file = formData.get("file");
+    const files = formData.getAll("file");
     const code = formData.get("code");
 
-    if (!file || !(file instanceof File)) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-    }
-
-    const fileExtension = path.extname(file.name);
-    const uniqueFileName = `${code}${fileExtension}`;
-    const filePath = path.join(uploadDir, uniqueFileName);
-
-    // Check if the file already exists
-    try {
-      await fs.access(filePath);
+    if (!files || !files.length || !code) {
       return NextResponse.json(
-        { message: "Product code already exists" },
+        { error: "No files or code provided" },
         { status: 400 }
       );
-    } catch (err) {
-      // File does not exist, proceed with the upload
     }
 
-    // Convert the file to a buffer and write it to the /httpdocs/uploads directory
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    await fs.writeFile(filePath, buffer);
+    // Ensure all uploaded items are files
+    const validFiles = files.filter((file) => file instanceof File);
+    if (validFiles.length === 0) {
+      return NextResponse.json(
+        { error: "Invalid file(s) uploaded" },
+        { status: 400 }
+      );
+    }
 
-    // Serve file from the httpdocs/uploads directory, encode URL to handle special characters
-    const fileUrl = `https://www.peramarin.com/uploads/${encodeURIComponent(uniqueFileName)}`;
+    const codeDir = path.join(uploadDir, code as string);
 
-    // Return the URL where the file is accessible
-    return NextResponse.json({ url: fileUrl }, { status: 200 });
+    // Create the directory for the product if it doesn't exist
+    await fs.mkdir(codeDir, { recursive: true });
+
+    // Array to hold the URLs of the uploaded files
+    const uploadedFileUrls = [];
+
+    // Loop through each file and save it sequentially
+    for (let i = 0; i < validFiles.length; i++) {
+      const file = validFiles[i] as File;
+      const fileExtension = path.extname(file.name);
+      const uniqueFileName = `${i}${fileExtension}`;
+      const filePath = path.join(codeDir, uniqueFileName);
+
+      // Check if the file already exists
+      try {
+        await fs.access(filePath);
+        return NextResponse.json(
+          { message: `File already exists at ${filePath}` },
+          { status: 400 }
+        );
+      } catch (err) {
+        // File does not exist, proceed with the upload
+      }
+
+      // Convert the file to a buffer and write it to the code subdirectory
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      await fs.writeFile(filePath, buffer);
+
+      // Store the URL of the uploaded file
+      const fileUrl = `/uploads/${code}/${uniqueFileName}`;
+      uploadedFileUrls.push(fileUrl);
+    }
+
+    // Return the list of uploaded file URLs
+    return NextResponse.json({ urls: uploadedFileUrls }, { status: 200 });
   } catch (error) {
-    console.error("Error uploading file:", error);
+    console.error("Error uploading files:", error);
     return NextResponse.json(
-      { error: "Failed to upload file" },
+      { error: "Failed to upload files" },
       { status: 500 }
     );
   }

@@ -37,12 +37,11 @@ const dataSchema = new Schema(
       unique: true,
       lowercase: true,
     },
-    url: {
+    urls: [{
       type: String,
       required: true,
       trim: true,
-      unique: true,
-    },
+    }],
   },
   { collection: "Product" }
 );

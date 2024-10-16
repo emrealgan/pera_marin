@@ -1,5 +1,6 @@
 "use client";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function Login() {
@@ -7,6 +8,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -20,10 +23,11 @@ export default function Login() {
     });
     setLoading(false);
 
-    if (result?.error) {
+    if (result?.ok) {
+      router.push("/admin")
+    } else if (result?.error) {
       setError("Invalid username or password");
-    } else if (result?.ok && window) {
-      window.location.href = "/admin"
+
     } else {
       setError("An unexpected error occurred. Please try again.");
     }

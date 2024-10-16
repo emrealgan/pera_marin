@@ -26,25 +26,28 @@ export async function DELETE(
       );
     }
 
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-
-    const files = fs.readdirSync(uploadsDir);
-    const imageFile = files.find(
-      (file) => path.basename(file, path.extname(file)) === product.code
+    const uploadsDir = path.join(
+      process.cwd(),
+      "public",
+      `uploads/${product.code}`
     );
 
-    if (imageFile) {
-      const imagePath = path.join(uploadsDir, imageFile);
-
-      fs.unlinkSync(imagePath);
+    // Check if the uploads directory exists
+    if (fs.existsSync(uploadsDir)) {
+      // Remove the directory and all its contents
+      fs.rmdirSync(uploadsDir, { recursive: true });
     }
 
     await Product.findByIdAndDelete(id);
 
-    return new NextResponse(JSON.stringify({ message: "Product deleted successfully" }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });  } catch (error) {
+    return new NextResponse(
+      JSON.stringify({ message: "Product deleted successfully" }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  } catch (error) {
     console.error("Delete error:", error);
     return NextResponse.json(
       { message: "An error occurred while deleting the product" },

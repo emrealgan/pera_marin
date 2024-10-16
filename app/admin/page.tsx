@@ -10,7 +10,7 @@ interface Product {
   name: string;
   brand: string;
   code: string;
-  url: string;
+  urls: string[];
 }
 
 export default function AdminPage() {
@@ -18,15 +18,15 @@ export default function AdminPage() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isFilter, setIsFilter] = useState(false); // Arama yapılıp yapılmadığını takip eder
   const [showAdding, setShowAdding] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Product>({
     _id: '',
     name: '',
     brand: '',
     code: '',
-    url: ''
+    urls: []
   });
-  const [file, setFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[] | null>(null);
+  const [imagePreviews, setImagePreviews] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
@@ -51,14 +51,14 @@ export default function AdminPage() {
   }, []);
 
   const cleanForm = () => {
-    setFile(null);
-    setImagePreview(null);
+    setFiles(null);
+    setImagePreviews(null);
     setFormData({
       _id: '',
       name: '',
       brand: '',
       code: '',
-      url: ''
+      urls: []
     });
   };
 
@@ -84,28 +84,43 @@ export default function AdminPage() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
+    const selectedFiles = e.target.files;
+    if (selectedFiles) {
+      const fileArray = Array.from(selectedFiles); // Convert FileList to an array
+      setFiles(fileArray); // Set the selected files
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(selectedFile);
+      const filePreviews = fileArray.map((file) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+
+        return new Promise<string>((resolve) => {
+          reader.onload = () => {
+            resolve(reader.result as string);
+          };
+        });
+      });
+
+      // Wait for all file previews to be read before setting the previews state
+      Promise.all(filePreviews).then((previews) => {
+        setImagePreviews(previews);
+      });
     }
-  };
+    // reader.readAsDataURL(selectedFile);
+  }
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAddLoading(true);
 
     try {
-      let imageUrl = formData.url;
+      let imageUrl = formData.urls;
 
-      if (file) {
+      if (files) {
         const fileData = new FormData();
-        fileData.append('file', file);
+        files.forEach((file) => {
+          fileData.append('file', file); // Append each file one by one
+        });
         fileData.append('code', formData.code);
 
         const uploadRes = await fetch('/api/uploadImage', {
@@ -118,16 +133,13 @@ export default function AdminPage() {
           toast.error(`Error: ${errorData.message}`);
           return;
         }
-        const { url } = await uploadRes.json();
-        formData.url = url; // Update form data with new image URL
-        imageUrl = url;
+        const { urls } = await uploadRes.json();
+        formData.urls = urls; // Update form data with new image URL
+        imageUrl = urls;
       }
 
-      const method = formData._id ? 'PUT' : 'POST'; // If _id exists, it's an update
-      const endpoint = formData._id ? `/api/updateProduct/${formData._id}` : '/api/addProduct';
-
-      const res = await fetch(endpoint, {
-        method,
+      const res = await fetch("/api/addProduct", {
+        method: "POST",
         headers: {
           'Content-Type': 'application/json',
         },
@@ -140,9 +152,9 @@ export default function AdminPage() {
         return;
       }
 
-      toast.success(formData._id ? 'Product updated successfully!' : 'Product added successfully!');
+      toast.success('Product added successfully!');
       cleanForm();
-      setImagePreview(null);
+      setImagePreviews(null);
       fetchProducts();
       toggleAddProductForm();
     } catch (error) {
@@ -168,18 +180,6 @@ export default function AdminPage() {
     } finally {
       setDeleteLoading(null);
     }
-  };
-
-  const handleUpdate = (product: Product) => {
-    setShowAdding(true); // Show the add form as an update form
-    setFormData({
-      _id: product._id,
-      name: product.name,
-      brand: product.brand,
-      code: product.code,
-      url: product.url,
-    });
-    setImagePreview(product.url); // Show current image preview
   };
 
   const handleLogout = async () => {
@@ -228,7 +228,7 @@ export default function AdminPage() {
         {showAdding && (
           <div className="w-full max-w-4xl bg-white shadow-lg rounded-lg p-6">
             <h2 className="text-2xl font-semibold mb-4 text-center text-gray-700">
-              {formData._id ? 'Update Product' : 'Add New Product'}
+              'Add New Product'
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -275,13 +275,22 @@ export default function AdminPage() {
                 <input
                   id="file-upload"
                   type="file"
+                  multiple
                   accept=".png, .jpg, .jpeg, .svg, .gif, .psd"
                   onChange={handleFileChange}
                   className="sr-only"
                 />
-                {imagePreview && (
+                {imagePreviews && (
                   <div className="mt-4 flex justify-self-start">
-                    <img src={imagePreview} alt="Selected file" className="w-32 h-32 object-contain" />
+                    {imagePreviews.map((image, index) => (
+                      <img
+                        key={index} // Ensure a unique key for each image
+                        src={image}
+                        alt={`Selected file ${index + 1}`} // Use the index for a unique alt text
+                        className="w-32 h-32 object-contain"
+                      />
+                    ))}
+
                   </div>
                 )}
               </div>
@@ -292,7 +301,7 @@ export default function AdminPage() {
                   disabled={addLoading}
                   className="w-1/3 bg-teal-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-teal-700"
                 >
-                  {addLoading ? 'Processing...' : formData._id ? 'Update' : 'Add'}
+                  Add
                 </button>
               </div>
             </form>
@@ -309,7 +318,7 @@ export default function AdminPage() {
               <ul className="divide-y divide-gray-200" key={product._id}>
                 <li className="py-4 flex flex-col md:flex-row justify-between items-center">
                   <div className="flex items-center">
-                    <img src={product.url} alt={product.name} className="h-32 w-32 object-contain mr-4" />
+                    <img src={product.urls[0]} alt={product.name} className="h-32 w-32 object-contain mr-4" />
                     <div>
                       <p className="text-lg font-semibold text-gray-800">{product.name}</p>
                       <p className="text-sm text-gray-600">{product.brand}</p>
@@ -317,12 +326,7 @@ export default function AdminPage() {
                     </div>
                   </div>
                   <div className="mt-4 md:mt-0 flex">
-                    <button
-                      onClick={() => handleUpdate(product)}
-                      className="bg-blue-600 text-white px-4 py-2 mr-2 rounded-md hover:bg-blue-700"
-                    >
-                      Update
-                    </button>
+
                     <button
                       onClick={() => handleDelete(product._id)}
                       disabled={deleteLoading === product._id}
